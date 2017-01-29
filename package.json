@@ -1,0 +1,27 @@
+{
+  "name": "habits-bot-telegram",
+  "version": "1.0.0",
+  "description": "A bot for tracking and developing your habits.",
+  "main": "main.js",
+  "scripts": {
+    "start": "node src/main.js",
+    "start:debug": "LOG_LEVEL=debug node src/main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dmitru/habits-bot-telegram.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dmitru/habits-bot-telegram/issues"
+  },
+  "homepage": "https://github.com/dmitru/habits-bot-telegram#readme",
+  "dependencies": {
+    "co": "^4.6.0",
+    "lodash": "^4.17.4",
+    "mongodb": "^2.2.22",
+    "telegram-bot-api": "^1.2.0",
+    "winston": "^2.3.1"
+  }
+}
