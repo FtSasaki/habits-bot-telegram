@@ -4,8 +4,7 @@ const TelegramApi = require('telegram-bot-api')
 const Store = require('../store')
 const logger = require('../util/logger')
 const conversations = require('../conversations')
-const constants = require('../constants')
-const states = constants.conversationStates
+const states = require('../conversations/states')
 
 class Bot {
     constructor(config) {
@@ -48,7 +47,10 @@ class Bot {
         })
             .then((user) => {
                 const conversationContext = { user, message }
-                return conversations.respond(conversationContext, this.store)
+                return conversations.respond({
+                    context: conversationContext,
+                    store: this.store,
+                })
             })
             .catch((err) =>
                 this.telegramApi.sendMessage({

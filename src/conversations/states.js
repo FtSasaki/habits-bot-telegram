@@ -4,6 +4,4 @@ const conversationStates = {
     NEW_HABIT__ASK_FOR_NAME: 'NEW_HABIT__ASK_FOR_NAME',
 }
 
-module.exports = {
-    conversationStates,
-}
+module.exports = conversationStates
