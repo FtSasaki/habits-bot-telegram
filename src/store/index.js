@@ -1,3 +1,4 @@
+const _ = require('lodash')
 const co = require('co')
 const MongoClient = require('mongodb').MongoClient
 
@@ -31,6 +32,18 @@ class Store {
                 )
                 db.close()
                 return user.value
+            }))
+    }
+
+    newHabit({ userId, data }) {
+        return this.getMongoConnection()
+            .then((db) => co(function*() {
+                const habits = db.collection('habits')
+                const habit = yield habits.insertOne(_.merge(data, { userId }))
+                db.close()
+                console.log(habit)
+                console.log(habit.value)
+                return habit.value
             }))
     }
 }

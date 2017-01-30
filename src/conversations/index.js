@@ -1,6 +1,8 @@
+const _ = require('lodash')
+
 const logger = require('../util/logger')
-const constants = require('../constants')
-const states = constants.conversationStates
+const states = require('./states')
+const { commandStateHandlers, matchCommand } = require('./commands')
 
 /**
   @typedef User
@@ -29,10 +31,10 @@ const states = constants.conversationStates
   @property {Message} message
 **/
 
-const stateHandlers = {
+const stateHandlers = _.merge({
     [states.NEW_USER]: handleNewUserState,
     [states.INITIAL]: handleInitialState,
-}
+}, commandStateHandlers)
 
 /**
   This function implements the actual logic for the bot.
@@ -43,10 +45,10 @@ const stateHandlers = {
   @param {Store} store - for data access
   @return {Promise<Response>} the bot's response to the message
  **/
-function respond(context, store) {
+function respond({ context, store }) {
     const state = context.user.state
     const stateHandler = stateHandlers[state]
-    return stateHandler(context, store)
+    return stateHandler({ context, store })
         .then(({ newState, response }) => {
             logger.debug('Conversation context: ', JSON.stringify(context, null, 2),
                 '\nState: ', state,
@@ -68,20 +70,16 @@ From now on, we're old friends! Unless you send me "forget me", of course.`,
     return Promise.resolve({ response, newState })
 }
 
-function handleInitialState(context) {
+function handleInitialState({ context, store }) {
     const message = context.message.text
-    let responseText, newState
-    if (message === 'forget me') {
-        responseText = 'All right, I will forget you... Who are you, stranger?'
-        newState = states.NEW_USER
-    } else {
-        responseText = `Welcome back, my old friend ${ context.user.firstName }!`
-        newState = states.INITIAL
+    const command = matchCommand(message)
+    if (command) {
+        return command.handle({ context, store })
     }
     const response = {
-        text: responseText,
-        newState,
+        text: 'Sorry, I don\'t know what you mean.\nPlease, try the only command I understand: "/new". :(',
     }
+    const newState = states.INITIAL
     return Promise.resolve({ response, newState })
 }
 
