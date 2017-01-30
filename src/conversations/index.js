@@ -61,10 +61,9 @@ function respond({ context, store }) {
         })
 }
 
-function handleNewUserState(context) {
+function handleNewUserState({ context }) {
     const response = {
-        text: `Nice to meet you, ${ context.user.firstName }!
-From now on, we're old friends! Unless you send me "forget me", of course.`,
+        text: `Nice to meet you, ${ context.user.firstName }!`,
     }
     const newState = states.INITIAL
     return Promise.resolve({ response, newState })
