@@ -20,7 +20,15 @@ class Store {
         })
     }
 
-    updateUser({ id, data, upsert = false }) {
+    getOrCreateUser({ id, data }) {
+        return this._updateOrCreateUser({ id, data, upsert: true })
+    }
+
+    updateUser({ id, data }) {
+        return this._updateOrCreateUser({ id, data, upsert: false })
+    }
+
+    _updateOrCreateUser({ id, data, upsert = false }) {
         const update = upsert ? { $setOnInsert: data } : { $set: data }
         return this.getMongoConnection()
             .then((db) => co(function*() {

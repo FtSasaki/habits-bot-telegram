@@ -40,10 +40,9 @@ class Bot {
             username: telegramMessage.from.username,
             state: states.NEW_USER,
         }
-        this.store.updateUser({
+        this.store.getOrCreateUser({
             id: userId,
             data: initialUserData,
-            upsert: true
         })
             .then((user) => {
                 const conversationContext = { user, message }
