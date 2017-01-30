@@ -41,8 +41,6 @@ class Store {
                 const habits = db.collection('habits')
                 const habit = yield habits.insertOne(_.merge(data, { userId }))
                 db.close()
-                console.log(habit)
-                console.log(habit.value)
                 return habit.value
             }))
     }
