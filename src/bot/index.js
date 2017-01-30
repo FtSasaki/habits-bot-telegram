@@ -4,6 +4,8 @@ const TelegramApi = require('telegram-bot-api')
 const Store = require('../store')
 const logger = require('../util/logger')
 const conversations = require('../conversations')
+const constants = require('../constants')
+const states = constants.conversationStates
 
 class Bot {
     constructor(config) {
@@ -33,26 +35,37 @@ class Bot {
         }
 
         const userId = telegramMessage.from.id
-        const userData = {
+        const initialUserData = {
             firstName: telegramMessage.from.first_name,
             lastName: telegramMessage.from.last_name,
             username: telegramMessage.from.username,
+            state: states.NEW_USER,
         }
-        this.store.userUpsert(userId, userData)
+        this.store.updateUser({
+            id: userId,
+            data: initialUserData,
+            upsert: true
+        })
             .then((user) => {
-                const context = {
-                    user,
-                    message,
-                }
-                return context
+                const conversationContext = { user, message }
+                return conversations.respond(conversationContext, this.store)
             })
-            .then((context) => conversations.respond(context, this.store))
-            .then((response) =>
+            .catch((err) =>
+                this.telegramApi.sendMessage({
+                    chat_id: chatId,
+                    text: 'Eh... Something went wrong, please try write to me later.',
+                }).then(() => { throw err })
+            )
+            .then(({ newState, response }) =>
                 this.telegramApi.sendMessage({
                     chat_id: chatId,
                     text: response.text,
-                })
+                }).then(() => newState)
             )
+            .then((newState) => this.store.updateUser({
+                id: userId,
+                data: { state: newState }
+            }))
             .catch((err) => this.handleError(err, userId, message))
     }
 

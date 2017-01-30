@@ -19,14 +19,15 @@ class Store {
         })
     }
 
-    userUpsert(id, userData) {
+    updateUser({ id, data, upsert = false }) {
+        const update = upsert ? { $setOnInsert: data } : { $set: data }
         return this.getMongoConnection()
             .then((db) => co(function*() {
                 const users = db.collection('users')
                 const user = yield users.findAndModify(
                     { _id: id }, [['_id', 1]],
-                    { $set: userData },
-                    { new: true, upsert: true }
+                    update,
+                    { new: true, upsert }
                 )
                 db.close()
                 return user.value
