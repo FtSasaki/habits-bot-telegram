@@ -39,6 +39,7 @@ class Bot {
             lastName: telegramMessage.from.last_name,
             username: telegramMessage.from.username,
             state: states.NEW_USER,
+            stateData: null,
         }
         this.store.getOrCreateUser({
             id: userId,
@@ -57,15 +58,18 @@ class Bot {
                     text: 'Eh... Something went wrong, please try write to me later.',
                 }).then(() => { throw err })
             )
-            .then(({ newState, response }) =>
+            .then(({ newState, newStateData, response }) =>
                 this.telegramApi.sendMessage({
                     chat_id: chatId,
                     text: response.text,
-                }).then(() => newState)
+                }).then(() => ({ newState, newStateData }))
             )
-            .then((newState) => this.store.updateUser({
+            .then(({ newState, newStateData }) => this.store.updateUser({
                 id: userId,
-                data: { state: newState }
+                data: {
+                    state: newState,
+                    stateData: newStateData,
+                },
             }))
             .catch((err) => this.handleError(err, userId, message))
     }
