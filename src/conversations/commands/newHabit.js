@@ -18,7 +18,7 @@ function handleNewHabit({ context }) {
     } else if (state === states.NEW_HABIT__ASK_FOR_NAME) {
         return Promise.resolve({
             response: {
-                text: 'OK! Added new habit',
+                text: `OK! Added new habit: ${ context.message.text }`,
             },
             newState: states.INITIAL,
         })
