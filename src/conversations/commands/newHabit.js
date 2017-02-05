@@ -1,29 +1,41 @@
-const assert = require('assert')
 const states = require('../states')
 
 const acceptedStates = [
     states.NEW_HABIT__ASK_FOR_NAME,
 ]
 
-function handleNewHabit({ context }) {
+function handleNewHabit({ context, store }) {
     const state = context.user.state
-    assert(state === states.INITIAL || acceptedStates.includes(state))
-    if (state === states.INITIAL) {
+    switch (state) {
+    case states.INITIAL: {
         return Promise.resolve({
             response: {
                 text: 'OK! Now, please describe your habit:',
             },
             newState: states.NEW_HABIT__ASK_FOR_NAME,
         })
-    } else if (state === states.NEW_HABIT__ASK_FOR_NAME) {
-        return Promise.resolve({
+    }
+    case states.NEW_HABIT__ASK_FOR_NAME: {
+        const userId = context.user._id
+        const habitName = context.message.text.trim()
+        return store.newHabit({
+            userId,
+            data: {
+                name: habitName,
+                daysTracked: [],
+                dateCreated: new Date(),
+            },
+        }).then(() => ({
             response: {
                 text: `OK! Added new habit: ${ context.message.text }`,
             },
             newState: states.INITIAL,
-        })
+        }))
     }
-    return Promise.reject('Invalid state')
+    default: {
+        throw 'Invalid state'
+    }
+    }
 }
 
 module.exports = {
@@ -31,4 +43,5 @@ module.exports = {
     matcher: ['new', 'add'],
     handlesStates: acceptedStates,
     handle: handleNewHabit,
+    states,
 }

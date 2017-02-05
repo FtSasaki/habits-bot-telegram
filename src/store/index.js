@@ -1,6 +1,7 @@
 const _ = require('lodash')
 const co = require('co')
-const MongoClient = require('mongodb').MongoClient
+const mongodb = require('mongodb')
+const { MongoClient, ObjectId } = mongodb
 
 const logger = require('../util/logger')
 
@@ -50,6 +51,28 @@ class Store {
                 const habit = yield habits.insertOne(_.merge(data, { userId }))
                 db.close()
                 return habit.value
+            }))
+    }
+
+    deleteHabit({ userId, id }) {
+        return this.getMongoConnection()
+            .then((db) => co(function*() {
+                const habits = db.collection('habits')
+                const deletedHabit = yield habits.findOneAndDelete({
+                    userId: userId,
+                    _id: ObjectId(id),
+                })
+                db.close()
+                return deletedHabit.value
+            }))
+    }
+
+    getHabits({ userId }) {
+        return this.getMongoConnection()
+            .then((db) => co(function*() {
+                const habits = yield db.collection('habits').find({ userId }).toArray()
+                db.close()
+                return habits
             }))
     }
 }

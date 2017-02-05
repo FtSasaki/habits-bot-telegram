@@ -1,5 +1,7 @@
 const commands = [
     require('./newHabit'),
+    require('./deleteHabit'),
+    require('./listHabits'),
 ]
 
 function getCommandStateHandlers(commands) {

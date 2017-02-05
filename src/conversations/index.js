@@ -47,16 +47,20 @@ const stateHandlers = _.merge({
  **/
 function respond({ context, store }) {
     const state = context.user.state
+    const stateData = context.user.stateData
     const stateHandler = stateHandlers[state]
     return stateHandler({ context, store })
-        .then(({ newState, response }) => {
+        .then(({ newState, newStateData, response }) => {
             logger.debug('Conversation context: ', JSON.stringify(context, null, 2),
                 '\nState: ', state,
+                '\nStateData: ', JSON.stringify(stateData, null, 2),
                 '\nResponse: ', JSON.stringify(response, null, 2),
-                '\nNew state: ', newState)
+                '\nNew State: ', newState || state,
+                '\nNew StateData: ', JSON.stringify(newStateData, null, 2))
             return {
                 response,
                 newState,
+                newStateData,
             }
         })
 }

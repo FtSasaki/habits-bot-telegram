@@ -6,6 +6,19 @@ const logger = require('../util/logger')
 const conversations = require('../conversations')
 const states = require('../conversations/states')
 
+function serializeResponse(response) {
+    const serializedResponse = {}
+    for (var key in response) {
+        const value = response[key]
+        if (key === 'reply_markup') {
+            serializedResponse[key] = JSON.stringify(value)
+        } else {
+            serializedResponse[key] = value
+        }
+    }
+    return serializedResponse
+}
+
 class Bot {
     constructor(config) {
         this.handleError = this.handleError.bind(this)
@@ -22,24 +35,34 @@ class Bot {
 
     listen() {
         this.telegramApi.on('message', this.onMessage)
+        this.telegramApi.on('inline.callback.query', this.onMessage)
         return Promise.resolve()
     }
 
-    onMessage(telegramMessage) {
-        logger.debug('Bot.onMessage: ', JSON.stringify(telegramMessage, null, 2))
+    onMessage(data) {
+        logger.debug('Bot.onMessage: ', JSON.stringify(data, null, 2))
 
-        const chatId = telegramMessage.chat.id
+        if (!data) {
+            return
+        }
+        const chat = data.chat || (data.message && data.message.chat)
+        const userFrom = data.from || (data.message && data.message.from)
+        if (!chat || !userFrom) {
+            return
+        }
+        const chatId = chat.id
         const message = {
-            text: telegramMessage.text || '',
+            text: data.text || null,
+            data: data.data || null,
         }
 
-        const userId = telegramMessage.from.id
+        const userId = userFrom.id
         const initialUserData = {
-            firstName: telegramMessage.from.first_name,
-            lastName: telegramMessage.from.last_name,
-            username: telegramMessage.from.username,
+            firstName: userFrom.first_name,
+            lastName: userFrom.last_name,
+            username: userFrom.username,
             state: states.NEW_USER,
-            stateData: null,
+            stateData: {},
         }
         this.store.getOrCreateUser({
             id: userId,
@@ -52,25 +75,58 @@ class Bot {
                     store: this.store,
                 })
             })
-            .catch((err) =>
-                this.telegramApi.sendMessage({
-                    chat_id: chatId,
-                    text: 'Eh... Something went wrong, please try write to me later.',
-                }).then(() => { throw err })
-            )
-            .then(({ newState, newStateData, response }) =>
-                this.telegramApi.sendMessage({
-                    chat_id: chatId,
-                    text: response.text,
-                }).then(() => ({ newState, newStateData }))
-            )
-            .then(({ newState, newStateData }) => this.store.updateUser({
-                id: userId,
-                data: {
-                    state: newState,
+            .catch((err) => {
+                this.handleError(err, userId, message)
+                return {
+                    newState: states.INITIAL,
+                    newStateData: {},
+                    response: {
+                        text: 'Something went wrong while processing your command.',
+                    },
+                }
+            })
+            .then(({ newState, newStateData, response }) => {
+                let telegramApiAction
+                if (response.replaceMessage) {
+                    telegramApiAction = this.telegramApi.editMessageText(
+                        _.merge(serializeResponse(response), {
+                            message_id: response.replaceMessage,
+                            chat_id: chatId,
+                        }))
+                } else {
+                    telegramApiAction = this.telegramApi.sendMessage(
+                        _.merge({ chat_id: chatId }, serializeResponse(response))
+                    )
+                }
+                return telegramApiAction.then((sentMessage) => {
+                    const stateData = newStateData || {}
+                    if (response.saveThisMessageInStateData) {
+                        stateData.lastSentMessage = sentMessage
+                    }
+                    return {
+                        newState,
+                        newStateData: stateData,
+                    }
+                })
+            })
+            .then(({ newState, newStateData }) => {
+                const userUpdateData = {
                     stateData: newStateData,
-                },
-            }))
+                }
+                if (newState) {
+                    userUpdateData.state = newState
+                }
+                return this.store.updateUser({
+                    id: userId,
+                    data: userUpdateData,
+                })
+            })
+            .catch((err) => {
+                this.telegramApi.sendMessage({
+                    chat_id: chatId,
+                    text: 'Something went wrong while processing your command.',
+                }).then(() => { throw err })
+            })
             .catch((err) => this.handleError(err, userId, message))
     }
 
