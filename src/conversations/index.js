@@ -2,7 +2,7 @@ const _ = require('lodash')
 
 const logger = require('../util/logger')
 const states = require('./states')
-const { commandStateHandlers, matchCommand } = require('./commands')
+const { commandStateHandlers, matchCommand, commandsDescription } = require('./commands')
 
 /**
   @typedef User
@@ -80,7 +80,7 @@ function handleInitialState({ context, store }) {
         return command.handle({ context, store })
     }
     const response = {
-        text: 'Sorry, I don\'t know what you mean.\nPlease, try the only command I understand: "/new". :(',
+        text: `Sorry, I don\'t know what you mean.\nPlease, try next commands:\n\n${commandsDescription}`,
     }
     const newState = states.INITIAL
     return Promise.resolve({ response, newState })
