@@ -14,7 +14,18 @@ function getCommandStateHandlers(commands) {
     return stateHandlers
 }
 
+function getCommandsDescription(commands) {
+    let description = ''
+    commands.forEach((command) => {
+        let mainName = `/${command.matcher[0]}`
+        let aliases = `${command.matcher.slice(1).map((name) => '/' + name).join(', ')}`
+        description = description + `${mainName} (${aliases}) - ${command.description} \n`
+    })
+    return description
+}
+
 const commandStateHandlers = getCommandStateHandlers(commands)
+const commandsDescription = getCommandsDescription(commands)
 
 function matchCommand(text) {
     if (!text) {
@@ -26,7 +37,7 @@ function matchCommand(text) {
         return null
     }
     const commandName = match[1]
-    for (var command of commands) {
+    for (let command of commands) {
         if (command.matcher.includes(commandName)) {
             return command
         }
@@ -38,4 +49,5 @@ module.exports = {
     commands,
     matchCommand,
     commandStateHandlers,
+    commandsDescription,
 }

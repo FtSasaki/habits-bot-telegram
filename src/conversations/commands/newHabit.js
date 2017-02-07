@@ -1,5 +1,8 @@
 const states = require('../states')
 
+const names = ['new', 'add']
+const description = 'add a new habit'
+
 const acceptedStates = [
     states.NEW_HABIT__ASK_FOR_NAME,
 ]
@@ -40,7 +43,8 @@ function handleNewHabit({ context, store }) {
 
 module.exports = {
     name: 'NEW_HABIT',
-    matcher: ['new', 'add'],
+    matcher: names,
+    description: description,
     handlesStates: acceptedStates,
     handle: handleNewHabit,
     states,

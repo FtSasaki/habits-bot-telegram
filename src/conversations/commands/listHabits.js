@@ -1,5 +1,8 @@
 const states = require('../states')
 
+const names = ['list', 'all']
+const description = 'display all habits you manage'
+
 function handleListHabit({ context, store }) {
     const state = context.user.state
     if (state !== states.INITIAL) {
@@ -17,7 +20,8 @@ function handleListHabit({ context, store }) {
 
 module.exports = {
     name: 'LIST_HABITS',
-    matcher: ['list', 'all'],
+    matcher: names,
+    description: description,
     handlesStates: [],
     handle: handleListHabit,
     states,

@@ -1,6 +1,9 @@
 const _ = require('lodash')
 const states = require('../states')
 
+const names = ['delete', 'remove']
+const description = 'remove a habit'
+
 const acceptedStates = [
     states.DELETE_HABIT__CHOOSE,
 ]
@@ -72,7 +75,8 @@ function handleDeleteHabit({ context, store }) {
 
 module.exports = {
     name: 'DELETE_HABIT',
-    matcher: ['delete', 'remove'],
+    matcher: names,
+    description: description,
     handlesStates: acceptedStates,
     handle: handleDeleteHabit,
     states,
